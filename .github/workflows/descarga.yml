@@ -2,8 +2,13 @@ name: Descarga Compra Agil cada hora
 
 on:
   schedule:
-    - cron: '0 * * * *'
+    # Cambiado al minuto 15 para evitar la saturación de los servidores de GitHub en el minuto 0
+    - cron: '15 * * * *'
   workflow_dispatch:
+
+# CRÍTICO: Esto le da permiso al bot para modificar y subir el archivo al repositorio
+permissions:
+  contents: write
 
 jobs:
   descarga:
@@ -33,13 +38,25 @@ jobs:
         run: |
           URL=$(cat respuesta.json | grep -oE 'https://[^"]+\.xlsx[^"]*')
           echo "URL encontrada: $URL"
+          if [ -z "$URL" ]; then
+            echo "Error: No se encontró URL en la respuesta de la API"
+            exit 1
+          fi
           curl -s -o compra_agil.xlsx "$URL"
 
       - name: Commit y push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git config user.name "bot"
-          git config user.email "bot@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add compra_agil.xlsx
-          git commit -m "Actualización $(date +'%F %T') rango ${{ steps.fechas.outputs.desde }} a ${{ steps.fechas.outputs.hasta }}" || echo "sin cambios"
-          git pull --rebase origin main
-          git push
+          
+          # Solo hace commit si hay cambios reales en el archivo
+          if ! git diff --cached --quiet; then
+            git commit -m "Actualización $(date +'%F %T') rango ${{ steps.fechas.outputs.desde }} a ${{ steps.fechas.outputs.hasta }}"
+            git pull --rebase origin main
+            git push origin main
+          else
+            echo "El archivo no ha cambiado desde la última descarga."
+          fi
