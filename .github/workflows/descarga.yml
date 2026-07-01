@@ -21,7 +21,7 @@ jobs:
 
       - name: Pedir link de descarga a la API
         run: |
-          RESPONSE=$(curl -s "https://api.buscador.mercadopublico.cl/compra-agil?action=download-excel&max_budget=7500000&min_budget=1&date_from=${{ steps.fechas.outputs.desde }}&date_to=${{ steps.fechas.outputs.hasta }}&order_by=closing_soon&status=1" \
+          RESPONSE=$(curl -s "https://api.buscador.mercadopublico.cl/compra-agil?action=download-excel&max_budget=7500000&min_budget=1&date_from=${{ steps.fechas.outputs.desde }}&date_to=${{ steps.fechas.outputs.hasta }}&order_by=closing_soon&status=2" \
             -H "accept: application/json, text/plain, */*" \
             -H "origin: https://buscador.mercadopublico.cl" \
             -H "referer: https://buscador.mercadopublico.cl/" \
